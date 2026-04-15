@@ -11,8 +11,14 @@ jobs:
         job: [1, 2, 3]
 
     steps:
-      - name: Print runner
-        run: echo "Running on $(hostname)"
+      - name: Show runner
+        run: hostname
 
-      - name: Memory load
-        run: docker run -d python:3.9 bash -c "python3 -c 'a=[]; [a.append(bytearray(1024*1024)) for _ in range(2000)]; import time; time.sleep(120)'"
+      - name: Run memory load
+        run: docker run -d python:3.9 bash -c "python3 -c 'a=[]; import time; [a.append(bytearray(1024*1024)) for _ in range(1500)]; time.sleep(120)'"
+
+      - name: Wait for load
+        run: sleep 60
+
+      - name: Show containers
+        run: docker ps
