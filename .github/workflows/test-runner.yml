@@ -8,14 +8,14 @@ jobs:
     runs-on: self-hosted
     steps:
 
-      # SMALL
-      - name: Small Image
-        run: docker run --rm nginx
+      - name: Pull large image
+        run: docker pull mcr.microsoft.com/dotnet/sdk:7.0
 
-      # MEDIUM
-      - name: Medium Image
-        run: docker run --rm node:18 node -e "console.log('test')"
+      - name: Run heavy container 1
+        run: docker run -d mcr.microsoft.com/dotnet/sdk:7.0 sleep 300
 
-      # LARGE
-      - name: Large Image
-        run: docker run -d mcr.microsoft.com/dotnet/sdk:7.0 sleep 120
+      - name: Run heavy container 2
+        run: docker run -d mcr.microsoft.com/dotnet/sdk:7.0 sleep 300
+
+      - name: Check running containers
+        run: docker ps
