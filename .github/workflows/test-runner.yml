@@ -1,4 +1,4 @@
-name: Docker Test
+name: Load Test
 
 on:
   workflow_dispatch:
@@ -7,11 +7,15 @@ jobs:
   test:
     runs-on: self-hosted
     steps:
-      - name: Pull small image
-        run: docker pull nginx
 
-      - name: Pull medium image
-        run: docker pull node:18
+      # SMALL
+      - name: Small Image
+        run: docker run --rm nginx
 
-      - name: Pull large image
-        run: docker pull mcr.microsoft.com/dotnet/sdk:7.0
+      # MEDIUM
+      - name: Medium Image
+        run: docker run --rm node:18 node -e "console.log('test')"
+
+      # LARGE
+      - name: Large Image
+        run: docker run -d mcr.microsoft.com/dotnet/sdk:7.0 sleep 120
