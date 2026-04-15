@@ -17,5 +17,5 @@ jobs:
       - name: Run heavy container 2
         run: docker run -d mcr.microsoft.com/dotnet/sdk:7.0 sleep 300
 
-      - name: Check running containers
+      - name: List containers
         run: docker ps
