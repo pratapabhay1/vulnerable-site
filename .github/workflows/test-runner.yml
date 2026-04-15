@@ -1,11 +1,17 @@
-name: Test Runner
+name: Docker Test
 
 on:
   workflow_dispatch:
 
 jobs:
   test:
-    runs-on: [self-hosted, Linux, X64]
+    runs-on: self-hosted
     steps:
-      - name: Test Runner
-        run: echo "Runner is working"
+      - name: Pull small image
+        run: docker pull nginx
+
+      - name: Pull medium image
+        run: docker pull node:18
+
+      - name: Pull large image
+        run: docker pull mcr.microsoft.com/dotnet/sdk:7.0
