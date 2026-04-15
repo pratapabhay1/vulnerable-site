@@ -5,7 +5,7 @@ on:
 
 jobs:
   test:
-    runs-on: self-hosted
+    runs-on: [self-hosted, Linux, X64]
     strategy:
       matrix:
         job: [1, 2, 3]
