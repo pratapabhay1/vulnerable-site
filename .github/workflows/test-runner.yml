@@ -1,21 +1,18 @@
-name: Load Test
+name: Auto Scaling Test
 
 on:
   workflow_dispatch:
 
 jobs:
   test:
-    runs-on: [self-hosted, Linux, X64]
+    runs-on: self-hosted
+    strategy:
+      matrix:
+        job: [1, 2, 3]
+
     steps:
+      - name: Print runner
+        run: echo "Running on $(hostname)"
 
-      - name: Pull large image
-        run: docker pull mcr.microsoft.com/dotnet/sdk:7.0
-
-      - name: Run heavy container 1
-        run: docker run -d mcr.microsoft.com/dotnet/sdk:7.0 sleep 300
-
-      - name: Run heavy container 2
-        run: docker run -d mcr.microsoft.com/dotnet/sdk:7.0 sleep 300
-
-      - name: List containers
-        run: docker ps
+      - name: Memory load
+        run: docker run -d python:3.9 bash -c "python3 -c 'a=[]; [a.append(bytearray(1024*1024)) for _ in range(2000)]; import time; time.sleep(120)'"
