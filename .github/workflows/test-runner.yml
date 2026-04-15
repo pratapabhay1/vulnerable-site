@@ -5,10 +5,11 @@ on:
 
 jobs:
   test:
-    runs-on: [self-hosted, Linux, X64]
     strategy:
       matrix:
-        job: [1, 2, 3]
+        runner: [runner1, runner2]
+
+    runs-on: [self-hosted, ${{ matrix.runner }}]
 
     steps:
       - name: Show runner
@@ -17,8 +18,8 @@ jobs:
       - name: Run container
         run: docker run -d python:3.9 sleep 180
 
-      - name: Show running containers
+      - name: Show containers
         run: docker ps
 
-      - name: Wait to observe
-        run: sleep 90
+      - name: Wait
+        run: sleep 60
