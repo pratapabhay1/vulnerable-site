@@ -1,4 +1,4 @@
-name: Mend POC - All Sizes
+name: Mend POC
 on:
   workflow_dispatch:
     inputs:
