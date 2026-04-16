@@ -1,9 +1,11 @@
 name: K8s Runner Load Test
 
-on: [push]
+on:
+  push:
+  workflow_dispatch:
 
 jobs:
-  test:
+  load-test:
     runs-on: [self-hosted, eks-runner]
 
     strategy:
@@ -11,7 +13,7 @@ jobs:
         load: [small, medium, large]
 
     steps:
-      - name: Show test type
+      - name: Show load type
         run: echo "Running ${{ matrix.load }} load test"
 
       - name: Run load
@@ -27,9 +29,17 @@ jobs:
             dd if=/dev/zero of=/tmp/test bs=1M count=1000
           fi
 
-      - name: Show system resources
+      - name: CPU stress
+        run: |
+          echo "Starting CPU stress"
+          yes > /dev/null &
+          PID=$!
+          sleep 15
+          kill $PID
+
+      - name: Show system resources (inside pod)
         run: |
           echo "CPU cores:"
           nproc
-          echo "Memory usage:"
+          echo "Memory:"
           free -h
