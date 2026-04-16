@@ -1,7 +1,6 @@
 name: K8s Runner Load Test
 
 on:
-  push:
   workflow_dispatch:
 
 jobs:
@@ -14,32 +13,23 @@ jobs:
 
     steps:
       - name: Show load type
-        run: echo "Running ${{ matrix.load }} load test"
+        run: echo "Running ${{ matrix.load }}"
 
-      - name: Run load
+      - name: Run load safely
         run: |
           if [ "${{ matrix.load }}" = "small" ]; then
-            echo "Small load"
             dd if=/dev/zero of=/tmp/test bs=1M count=100
           elif [ "${{ matrix.load }}" = "medium" ]; then
-            echo "Medium load"
-            dd if=/dev/zero of=/tmp/test bs=1M count=500
+            dd if=/dev/zero of=/tmp/test bs=1M count=300
           else
-            echo "Large load"
-            dd if=/dev/zero of=/tmp/test bs=1M count=1000
+            dd if=/dev/zero of=/tmp/test bs=1M count=600
           fi
 
       - name: CPU stress
         run: |
-          echo "Starting CPU stress"
-          yes > /dev/null &
-          PID=$!
-          sleep 15
-          kill $PID
+          timeout 10s yes > /dev/null || true
 
-      - name: Show system resources (inside pod)
+      - name: Print resources
         run: |
-          echo "CPU cores:"
           nproc
-          echo "Memory:"
           free -h
