@@ -1,35 +1,81 @@
-name: K8s Runner Load Test
-
+name: Mend POC - All Sizes
 on:
   workflow_dispatch:
+    inputs:
+      size:
+        description: 'Scan size to run'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - small
+          - medium
+          - large
 
 jobs:
-  load-test:
-    runs-on: [self-hosted, eks-runner]
-
+  mend-scan:
+    runs-on: eks-runner
     strategy:
       matrix:
-        load: [small, medium, large]
+        size: [small, medium, large]
+      fail-fast: false  # don't cancel others if one fails
 
     steps:
-      - name: Show load type
-        run: echo "Running ${{ matrix.load }}"
+      - uses: actions/checkout@v4
 
-      - name: Run load safely
+      - name: Set scan parameters
+        id: params
         run: |
-          if [ "${{ matrix.load }}" = "small" ]; then
-            dd if=/dev/zero of=/tmp/test bs=1M count=100
-          elif [ "${{ matrix.load }}" = "medium" ]; then
-            dd if=/dev/zero of=/tmp/test bs=1M count=300
-          else
-            dd if=/dev/zero of=/tmp/test bs=1M count=600
-          fi
+          case "${{ matrix.size }}" in
+            small)
+              echo "deps=10"         >> $GITHUB_OUTPUT
+              echo "sleep=10"        >> $GITHUB_OUTPUT
+              echo "memory=100"      >> $GITHUB_OUTPUT
+              echo "vulns=2 LOW"     >> $GITHUB_OUTPUT
+              ;;
+            medium)
+              echo "deps=100"        >> $GITHUB_OUTPUT
+              echo "sleep=30"        >> $GITHUB_OUTPUT
+              echo "memory=300"      >> $GITHUB_OUTPUT
+              echo "vulns=5 MEDIUM, 1 HIGH" >> $GITHUB_OUTPUT
+              ;;
+            large)
+              echo "deps=500"        >> $GITHUB_OUTPUT
+              echo "sleep=60"        >> $GITHUB_OUTPUT
+              echo "memory=500"      >> $GITHUB_OUTPUT
+              echo "vulns=12 MEDIUM, 4 HIGH, 1 CRITICAL" >> $GITHUB_OUTPUT
+              ;;
+          esac
 
-      - name: CPU stress
+      - name: Run ${{ matrix.size }} scan
         run: |
-          timeout 10s yes > /dev/null || true
+          echo "=== ${{ matrix.size }} IMAGE SCAN ==="
+          echo "Scanning ${{ steps.params.outputs.deps }} dependencies..."
+          sleep ${{ steps.params.outputs.sleep }}
+          echo "Vulnerabilities: ${{ steps.params.outputs.vulns }}"
 
-      - name: Print resources
+      - name: Stress test memory (${{ matrix.size }})
         run: |
+          python3 -c "
+          import time
+          mb = ${{ steps.params.outputs.memory }}
+          data = bytearray(mb * 1024 * 1024)
+          print(f'Allocated {mb}MB successfully')
+          time.sleep(5)
+          print('Memory stable — releasing')
+          "
+
+      - name: Resource snapshot
+        run: |
+          echo "--- Node Resources ---"
+          free -m
           nproc
-          free -h
+          cat /proc/meminfo | grep -E "MemTotal|MemAvailable"
+
+      - name: Summary
+        run: |
+          echo "✅ ${{ matrix.size }} scan complete"
+          echo "Deps scanned : ${{ steps.params.outputs.deps }}"
+          echo "Memory used  : ${{ steps.params.outputs.memory }}MB"
+          echo "Vulns found  : ${{ steps.params.outputs.vulns }}"
