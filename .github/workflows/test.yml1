@@ -1,0 +1,35 @@
+name: K8s Runner Load Test
+
+on: [push]
+
+jobs:
+  test:
+    runs-on: [self-hosted, eks-runner]
+
+    strategy:
+      matrix:
+        load: [small, medium, large]
+
+    steps:
+      - name: Show test type
+        run: echo "Running ${{ matrix.load }} load test"
+
+      - name: Run load
+        run: |
+          if [ "${{ matrix.load }}" = "small" ]; then
+            echo "Small load"
+            dd if=/dev/zero of=/tmp/test bs=1M count=100
+          elif [ "${{ matrix.load }}" = "medium" ]; then
+            echo "Medium load"
+            dd if=/dev/zero of=/tmp/test bs=1M count=500
+          else
+            echo "Large load"
+            dd if=/dev/zero of=/tmp/test bs=1M count=1000
+          fi
+
+      - name: Show system resources
+        run: |
+          echo "CPU cores:"
+          nproc
+          echo "Memory usage:"
+          free -h
