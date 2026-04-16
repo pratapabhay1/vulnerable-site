@@ -1,0 +1,37 @@
+name: Mend POC Load Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  load-test:
+    runs-on: [self-hosted, eks-runner]
+
+    strategy:
+      matrix:
+        load: [small, medium, large]
+
+    steps:
+      - name: Show load
+        run: echo "Running ${{ matrix.load }} load"
+
+      - name: Simulate load
+        run: |
+          if [ "${{ matrix.load }}" = "small" ]; then
+            dd if=/dev/zero of=/tmp/test bs=1M count=200
+          elif [ "${{ matrix.load }}" = "medium" ]; then
+            dd if=/dev/zero of=/tmp/test bs=1M count=700
+          else
+            dd if=/dev/zero of=/tmp/test bs=1M count=1500
+          fi
+
+      - name: CPU stress
+        run: |
+          for i in 1 2 3; do yes > /dev/null & done
+          sleep 20
+          killall yes || true
+
+      - name: Show system info
+        run: |
+          nproc
+          free -h
